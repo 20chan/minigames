@@ -1,83 +1,98 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
+using Grid.Framework;
+using Grid.Framework.Components;
+
 namespace flappy_bird
 {
-    /// <summary>
-    /// This is the main type for your game.
-    /// </summary>
-    public class Game1 : Game
+    public class Game1 : Scene
     {
-        GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+        Bird bird;
+        Queue<Hurdle> hurdles;
 
-        public Game1()
+        protected override void InitSize()
         {
-            graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
+            _graphics.PreferredBackBufferWidth = 1920;
+            _graphics.PreferredBackBufferHeight = 1080;
+            base.InitSize();
         }
 
-        /// <summary>
-        /// Allows the game to perform any initialization it needs to before starting to run.
-        /// This is where it can query for any required services and load any non-graphic
-        /// related content.  Calling base.Initialize will enumerate through any components
-        /// and initialize them as well.
-        /// </summary>
-        protected override void Initialize()
-        {
-            // TODO: Add your initialization logic here
-
-            base.Initialize();
-        }
-
-        /// <summary>
-        /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
-        /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+            base.LoadContent();
 
-            // TODO: use this.Content to load your game content here
+            var birdObj = new GameObject("bird");
+            birdObj.AddComponent<Bird>();
+            birdObj.AddComponent<Renderable2D>().Texture = LoadContent<Texture2D>("bird");
+            birdObj.Scale = new Vector2(0.3f, 0.3f);
+
+            bird = Instantiate(birdObj).GetComponent<Bird>();
+            hurdles = new Queue<Hurdle>();
         }
 
-        /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// game-specific content.
-        /// </summary>
-        protected override void UnloadContent()
-        {
-            // TODO: Unload any non ContentManager content here
-        }
-
-        /// <summary>
-        /// Allows the game to run logic such as updating the world,
-        /// checking for collisions, gathering input, and playing audio.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
-            // TODO: Add your update logic here
-
             base.Update(gameTime);
         }
+    }
 
-        /// <summary>
-        /// This is called when the game should draw itself.
-        /// </summary>
-        /// <param name="gameTime">Provides a snapshot of timing values.</param>
-        protected override void Draw(GameTime gameTime)
+    class Bird : Component
+    {
+        private readonly Vector2 gravity;
+        private readonly float gravityPower = 0.3f;
+        private readonly float jumpPower = 15f;
+
+        private Vector2 _velocity;
+
+        public Bird()
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            gravity = new Vector2(0, gravityPower);
+        }
 
-            // TODO: Add your drawing code here
+        bool isSpaceNotPressing = true;
+        public override void Update()
+        {
 
-            base.Draw(gameTime);
+            if (Keyboard.GetState().IsKeyDown(Keys.Space) && isSpaceNotPressing)
+            {
+                isSpaceNotPressing = false;
+                this._velocity = new Vector2(0, -jumpPower);
+            }
+            if (Keyboard.GetState().IsKeyUp(Keys.Space) && !isSpaceNotPressing)
+                isSpaceNotPressing = true;
+
+            _velocity += gravity;
+            gameObject.Position += _velocity;
+            base.Update();
+        }
+
+        public override object Clone()
+        {
+            return this;
+        }
+    }
+
+    class Hurdle : Component
+    {
+        private int _height;
+        private GameObject _up, _down;
+
+        public override void Start()
+        {
+            
+            base.Start();
+        }
+
+        public override object Clone()
+        {
+            return new Hurdle()
+            {
+
+            };
         }
     }
 }
